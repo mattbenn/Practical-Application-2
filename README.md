@@ -2,9 +2,10 @@
 <p>This repo uses machine learning techniques to explore the <a href="https://www.kaggle.com/datasets/austinreese/craigslist-carstrucks-data">a used cars dataset</a>, scraped from Craigslist. For this project, Python was used, in <a href = https://github.com/mattbenn/Practical-Application-2/blob/main/prompt_II.ipynb>Jupyter Notebook</a>.</p>
 <p>The CRISP-DM process model was used to conduct the project, as visualized below in Figures 1 and 2.</p>
 <p align="center">
-<img src="images/crisp.png" width="300px" height="300px">
+<img src="images/crisp.png" width="400px" height="400px">
 <h4 align="center"> Figure 1</h4>
-<img src="images/crisp_details.png" width="300px" height="300px">
+<p align="center">
+<img src="images/crisp_details.png">
 <h4 align="center"> Figure 2</h4>
 </p>
 
@@ -23,8 +24,9 @@ There is a risk that the data I am working with will be too out of date, or not 
 The data has already been scarped from the internet, and only exploratory data analysis, data cleaning, and data modeling are left. The project will consist of the aforementioned data preprocessing and data processing steps, as well as writing a summary of findings for presentation to the client (the used car dealer).
 <p></p>
 <h2>Data Understanding</h2>
-The <a href="data/vehicles.csv">scraped dataset</a> is in .csv format and, before data cleaning, contains 18 features of over 426,000 observations:
-<img src="images/cars_info.png" width="300px" height="300px">
+The <a href="data/vehicles.csv">scraped dataset</a> is in .csv format and, before data cleaning, contains 18 features of over 426,000 observations:</p>
+<p align="center">
+<img src="images/cars_info.png">
 <p>Features include state and region (where the ad was placed), car manufacturer and car model, manufacturing year and odometer, and other pertinent information such as car condition, number of cylinders, and paint color. Our target feature is car price, a numeric feature ranging from $0 - $3.7b. Most features are categorical, meaning that we'll have to conduct encoding to find how they relate to price.
 <p>Data was not missing at all for price, state, and region, but all other features had at least some missing values. I decided to deal with these in different ways, as detailed later in this report.</p>
 <h2>Data Preparation</h2>
@@ -39,7 +41,8 @@ The data has no duplicate rows, but Vehicle Identification Numbers (VIN numbers)
 <h3>Data Selection & Feature Engineering</h3>
 <b>Numeric Features:</b>
 <p>After data cleaning price looked good, but year and odometer still had significant outliers:</p>
-<img src="images/numeric_with outliers.png" width="600px" height="250px">
+<p align="center">
+<img src="images/numeric_with outliers.png">
 <h4 align="center">Figure 3</h4>
 <p>I filtered both features to remove very high and very low values. Additionally, I created features that were the square of both year and filter, to check for quadratic relationships between these features and price.</p>
 
@@ -49,17 +52,25 @@ I carefully reviewed the number of unique categoris in each categorical feature,
 <p>I used OHE to transform condition and transmission into multiple binary (0/1) columns, because there were only a few categories for each of these, and in this analysis OHE will be easier to interpret than TE.
 <p>I used TE to transform car drive (4WD, etc.), car type (sedan, SUV, etc.), state, region, and manufacturing. TE will tell us if there's a significant effect of the category on price, but it won't tell us anything about which categories are associated with higher prices; for that insight I will use visualizations.
 <p>With this, the data was prepared for modeling. The plot matrix below (Figure 4) shows bar charts and histograms for all final features that will be included.</p>
-<img src="images/final_features.png" width="600px" height="600px">
+<p align="center">
+<img src="images/final_features.png">
 <h4 align="center">Figure 4</h4>
 
 <h2>Modeling</h2>
+<h3>Pre-modeling correlation</h3>
+Before modeling, I ran the correlations as they exist in the whole dataset, without running a test/train split:
+<p align="center">
+<img src="images/correlations_all.png"></p>
+To better approximate the relationships between OHE features and price, I calculated Spearman's rho correlations; this explains why the correlations between year and year<sup>2</sup>, and odometer and odometer<sup>2</sup>, are 1. Because there is going to be some multicollinearity between OHE features, and also between state and region, I will try regularization via Ridge and Lasso regression.
+  
 <h3>Modeling Technique & Test Design</h3>
 For data modeling, I used an 80/20 test-train split with 5-fold cross-validation. I tested both Ridge and Lasso regression, testing alpha parameters on powers of ten, from 10<sup>-3</sup> to 10<sup>3</sup>. When I included all features, the Ridge model performed the best (RMSE = 8166.22; R<sup>2</sup> = .22), with an alpha parameter of 1.0. However, the model coefficients for year and year<sup>2</sup> were very large in magnitude, and in opposite directions. While this isn't a problem, it makes interpretation a bit harder. I tried a second model, without the square of year, but the R<sup>2</sup> value (.18) for that model was much lower. I decided to stick with the first model.
 
 <h2>Evaluation</h2>
 <h3>Model Coefficients</h3>
 In the best-performing model, these are the coefficients:
-<img src="images/coef_table" width="600px" height="600px">
+<p align="center">
+<img src="images/coef_table.png">
 
 <h3>Interpreting OHE Features</h3>
 For car condition, all coefficients should be interpreted as the additional value of being listed as that condition, when compared to cars listed as being in 'Excellent' condition. So, for example, if a car is listed as being in 'Fair' condition, we could expect a total decrease in price of about $4.2k, whereas if listed as 'Like New', the car is likely to be worth about $1.4k more. For car transmission, the comparison category is 'Automatic'.
@@ -67,18 +78,22 @@ For car condition, all coefficients should be interpreted as the additional valu
 <h3>Interpreting TE Features</h3>
 Target Encoding (TE) is useful for encoding features with many categories, but a large coefficient only tells us that this feature is somehow connected to price. For this analysis, to aid in interpretation, I have produced violin plots for drive, type, and manufacturer. Region also had a large coefficient but this will be discussed in the next section.
 
-<img src="images/violin_drive" width="600px" height="600px">
+<p align="center">
+<img src="images/violin_drive.png" width="600px" height="600px">
 <p>Based on the above, we can see that car drive is connected to price. Cars with 4WD (four-wheel drive) have a higher average price, as do cars with RWD (rear-wheel drive) when compared to FWD (front-wheel drive).
 
-<img src="images/violin_type" width="600px" height="600px">
+<p align="center">
+<img src="images/violin_type.png" width="800px" height="800px">
 <p>We can see that car type is also related to price. For instance, pickups tend to sell for the most, and mini-vans the least.
 
-<img src="images/violin_manufact" width="600px" height="600px">
+<p align="center">
+<img src="images/violin_manufact.png" width="1000px" height="1000px">
 <p>Finally, here we can see that car manufacturer is significantly related to price. Tesla, Porsches, and Alfa-Romeos tend to sell for the most, while Saturns and Mercurys tend to sell for the least. (This isn't surprising, since Teslas are all cutting-edge electric vehicles, and Porsches and Alfa-Romeos are luxury brands.)
 
 <h3>Interpreting year and odometer</h3>
 A point should be made about year and odometer. The model included degree-1 and degree-2 features for both. All four features are standardized variables with ranges in the data of a maximum of +/- 4, meaning that there is not much difference between the absolute values for each degree of each feature. The effect of both variables should be interpreted in light of this, and in light of the degree of difference between the coefficients for both variables. Although the coefficient for year and year<sup>2</sup> are very large (abs. values > 744,000), the total effect of year should be interpreted in terms of the difference between the coefficients, which is ~4350. As the SD of the year increases, the price increases, meaning that newer cars will sell for more. Furthermore, the difference in signs means there's a quadratic relationships between year and price; at a certain point, older cars may sell for more, perhaps because they're in better condition. For odometer, there is a similar story, but the rate that which odometer values have a less negative, and then a positive, impact on price may be slower. This may be because price may rapidly decrease as odometer increases, but then that rate of decline evens out. In fact, as can be shown in the graphs below, the reverse would not start to happen until a z-value of ~1.3 for odometer, whereas the increase starts ~0.50 for year.
-<img src="images/std_year_odom.png" width="600px" height="600px">
+<p align="center">
+<img src="images/std_year_odom.png"></p>
 When translating this information to our dataset, that means that, on average, price started increasing for cars made after 2015, and for cars with over 168k miles on the odometer.
 
 <p><b>A note on vehicle model:</b> Throughout this project, there were many decision points that would affect the final regression model. The largest choice was probably leaving out car model. Car model will probably strongly predict price, because grouping vehicles of similar quality and luxury into similar model numbers is one of the marketing strategies used by automobile manufacturers. For instance, Honda Accords tend to be more expensive than Honda Civics, due to features like <a href=https://www.autonation.com/vehicle-research/honda-civic-vs-accord>advanced safety features and more advanced audio systems<a>. These are vehicle features not captured in other dimensions of our data, meaning that model will serve as a lower-dimension projection of these other features. So, it would likely increase predictive power if we included model, but because there were so many different models, it could not have been included with any real interpretation other than 'different models will sell for more on average than other models', and further work would be required to identify which models sold the most. There is a similar issue with manufacturer, but there were fewer manufacturers in the dataset, meaning that it was more feasible to include this in the model because the results could be visualized.
