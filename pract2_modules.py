@@ -39,7 +39,7 @@ def top_bottom_frequencies(df, columns, nval = 10, dropna=True):
 
     return results_df
 
-def plotColumnCounts(df, column_list, number_graphs_per_row = None, outlier_mask = False, stitle = None, dropna = True):
+def plotColumnCounts(df, column_list, number_graphs_per_row = None, outlier_mask = False, stitle = None, dropna = True, auto_show = True):
     if number_graphs_per_row is None:
         number_graphs_per_row = len(column_list)
     df = df[column_list] # Reduce df to only column list
@@ -69,7 +69,8 @@ def plotColumnCounts(df, column_list, number_graphs_per_row = None, outlier_mask
         plt.xticks(rotation = 90)
         plt.title(f'{column}')
     plt.tight_layout()
-    plt.show()
+    if auto_show:
+        plt.show()
 
 def trim_feature(series, threshold = .01):
     counts_ = series.value_counts(normalize = True)
